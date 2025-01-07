@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-import sys, os
 import sphinx_bootstrap_theme
-
-sys.path.insert(0, os.path.abspath("../"))
 
 # import your package to obtain the version info to display on the docs website
 import spopt
-
 
 # -- General configuration ------------------------------------------------
 
@@ -49,7 +44,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "spopt"
-copyright = "2020-, pysal developers"
+copyright = "2020-, pysal developers"  # noqa: A001
 author = "pysal developers"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -65,7 +60,7 @@ release = spopt.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -86,9 +81,10 @@ todo_include_todos = False
 # html_theme = 'alabaster'
 html_theme = "bootstrap"
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
-html_title = "%s v%s Manual" % (project, version)
+html_title = f"{project} v{version} Manual"
 
-# (Optional) Logo of your package. Should be small enough to fit the navbar (ideally 24x24).
+# (Optional) Logo of your package.
+# Should be small enough to fit the navbar (ideally 24x24).
 # Path should be relative to the ``_static`` files directory.
 # html_logo = "_static/images/package_logo.jpg"
 
@@ -161,7 +157,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "%sdoc" % project
+htmlhelp_basename = f"{project}doc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -187,9 +183,9 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "%sdoc.tex" % project,
-        u"%s Documentation" % project,
-        u"%s developers" % project,
+        f"{project}doc.tex",
+        f"{project} Documentation",
+        f"{project} developers",
         "manual",
     )
 ]
@@ -199,7 +195,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, project, u"%s Documentation" % project, [author], 1)]
+man_pages = [(master_doc, project, f"{project} Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -211,7 +207,7 @@ texinfo_documents = [
     (
         master_doc,
         project,
-        u"%s Documentation" % project,
+        f"{project} Documentation",
         author,
         project,
         "Spatial Optimization with PySAL",
@@ -247,17 +243,18 @@ def setup(app):
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "esda": ("https://pysal.org/esda/", None),
-    "geopandas": ("https://geopandas.readthedocs.io/en/latest/", None),
-    "giddy": ("https://giddy.readthedocs.io/en/latest/", None),
-    "hdbscan": ("https://hdbscan.readthedocs.io/en/latest/", None),
+    "geopandas": ("https://geopandas.org/en/latest/", None),
     "libpysal": ("https://pysal.org/libpysal/", None),
-    "numpy": ("https://docs.scipy.org/doc/numpy", None),
+    "mapclassify": ("https://pysal.org/mapclassify/", None),
+    "networkx": ("https://networkx.org/documentation/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "pointpats": ("https://pysal.org/pointpats/", None),
     "pulp": ("https://coin-or.github.io/pulp/", None),
-    "python": ("https://docs.python.org/3.9/", None),
+    "python": ("https://docs.python.org/3.12/", None),
     "region": ("https://region.readthedocs.io/en/latest/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
 }
 
@@ -301,7 +298,7 @@ nbsphinx_prolog = r"""
     \nbsphinxstartnotebook{\scriptsize\noindent\strut
     \textcolor{gray}{The following section was generated from
     \sphinxcode{\sphinxupquote{\strut {{ docname | escape_latex }}}} \dotfill}}
-"""
+"""  # noqa: E501
 
 # This is processed by Jinja2 and inserted after each notebook
 nbsphinx_epilog = r"""
@@ -318,6 +315,6 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
 
-mathjax_config = {
+mathjax3_config = {
     "TeX": {"equationNumbers": {"autoNumber": "AMS", "useLabelIds": True}},
 }

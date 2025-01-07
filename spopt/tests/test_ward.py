@@ -1,9 +1,13 @@
 import geopandas
 import libpysal
 import numpy
-import unittest
+from packaging.version import Version
 
 from spopt.region import WardSpatial
+
+# see gh:spopt#437
+LIBPYSAL_GE_48 = Version(libpysal.__version__) >= Version("4.8.0")
+w_kwargs = {"use_index": True} if LIBPYSAL_GE_48 else {}
 
 
 # Empirical tests -- Mexican states
@@ -12,13 +16,12 @@ pth = libpysal.examples.get_path("mexicojoin.shp")
 MEXICO = geopandas.read_file(pth)
 
 
-class TestWard(unittest.TestCase):
-    def setUp(self):
-
+class TestWard:
+    def setup_method(self):
         self.mexico = MEXICO.copy()
         self.mexico["count"] = 1
         self.attrs_name = [f"PCGDP{year}" for year in range(1950, 2010, 10)]
-        self.w = libpysal.weights.Queen.from_dataframe(self.mexico)
+        self.w = libpysal.weights.Queen.from_dataframe(self.mexico, **w_kwargs)
         self.known_labels = [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 4, 0]
         self.known_labels += [1, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 2, 2, 0]
 

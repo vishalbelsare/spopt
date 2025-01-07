@@ -1,10 +1,16 @@
 import geopandas
 import libpysal
 import numpy
+import pytest
+from packaging.version import Version
+from scipy.optimize import OptimizeWarning
 from sklearn.metrics import pairwise as skm
-import unittest
 
 from spopt.region import Skater
+
+# see gh:spopt#437
+LIBPYSAL_GE_48 = Version(libpysal.__version__) >= Version("4.8.0")
+w_kwargs = {"use_index": True} if LIBPYSAL_GE_48 else {}
 
 
 # Empirical tests
@@ -17,12 +23,11 @@ pth = libpysal.examples.get_path("columbus.shp")
 COLUMBUS = geopandas.read_file(pth)
 
 
-class TestSkater(unittest.TestCase):
-    def setUp(self):
-
+class TestSkater:
+    def setup_method(self):
         # Mexico
         self.mexico = MEXICO.copy()
-        self.w_mexico = libpysal.weights.Queen.from_dataframe(self.mexico)
+        self.w_mexico = libpysal.weights.Queen.from_dataframe(self.mexico, **w_kwargs)
         self.default_attrs_mexico = [f"PCGDP{year}" for year in range(1950, 2010, 10)]
         self.default_mexico = [0, 0, 1, 2, 2, 1, 1, 1, 1, 1, 3, 2, 1, 1, 1, 1]
         self.default_mexico += [4, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1]
@@ -33,12 +38,20 @@ class TestSkater(unittest.TestCase):
         self.columbus = COLUMBUS.copy()
         remove = [13, 14, 17, 18, 20, 23, 24, 29]
         self.columbus = self.columbus[~self.columbus.index.isin(remove)]
-        self.w_columbus = libpysal.weights.Queen.from_dataframe(self.columbus)
+        self.w_columbus = libpysal.weights.Queen.from_dataframe(
+            self.columbus, **w_kwargs
+        )
         self.attrs_columbus = ["HOVAL", "INC", "CRIME", "OPEN", "PLUMB", "DISCBD"]
-        self.columbus_labels = [0, 0, 0, 0, 1, 1, 0, 0, 2, 3, 1, 1, 0, 1, 3]
-        self.columbus_labels += [3, 2, 3, 2, 2, 2, 2, 4, 3, 2, 4, 2, 4]
-        self.columbus_labels += [5, 2, 4, 3, 3, 4, 5, 5, 5, 4, 3, 5, 5]
+        # used in `test_skater_island_pass`
+        self.columbus_labels_1 = [0, 0, 0, 0, 1, 1, 0, 0, 2, 3, 1, 1, 0, 1, 3]
+        self.columbus_labels_1 += [3, 2, 3, 2, 2, 2, 2, 4, 3, 2, 4, 2, 4]
+        self.columbus_labels_1 += [5, 2, 4, 3, 3, 4, 5, 5, 5, 4, 3, 5, 5]
+        # used in `test_skater_forest_affinity`
+        self.columbus_labels_2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2]
+        self.columbus_labels_2 += [0, 1, 2, 0, 0, 1, 1, 3, 0, 0, 3, 0, 3]
+        self.columbus_labels_2 += [1, 1, 3, 0, 0, 3, 1, 1, 1, 3, 0, 1, 1]
 
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_defaults(self):
         self.mexico["count"] = 1
         numpy.random.seed(RANDOM_STATE)
@@ -47,6 +60,7 @@ class TestSkater(unittest.TestCase):
 
         numpy.testing.assert_equal(model.labels_, self.default_mexico)
 
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_defaults_verbose(self):
         self.mexico["count"] = 1
         sfkws = {"verbose": 1}
@@ -61,6 +75,7 @@ class TestSkater(unittest.TestCase):
 
         numpy.testing.assert_equal(model.labels_, self.default_mexico)
 
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_defaults_super_verbose(self):
         self.mexico["count"] = 1
         sfkws = {"verbose": 2}
@@ -75,46 +90,102 @@ class TestSkater(unittest.TestCase):
 
         numpy.testing.assert_equal(model.labels_, self.default_mexico)
 
+    @pytest.mark.filterwarnings("ignore:MSF contains no valid moves after")
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_defaults_non_defaults(self):
         self.mexico["count"] = 1
         args = self.mexico, self.w_mexico, self.default_attrs_mexico
         n_clusters, floor, trace, islands = 10, 3, True, "ignore"
-        kws = dict(n_clusters=n_clusters, floor=floor, trace=trace, islands=islands)
-        sfkws = dict(
-            dissimilarity=skm.manhattan_distances,
-            affinity=None,
-            reduction=numpy.sum,
-            center=numpy.mean,
-            verbose=2,
-        )
-        kws.update(dict(spanning_forest_kwds=sfkws))
+        kws = {
+            "n_clusters": n_clusters,
+            "floor": floor,
+            "trace": trace,
+            "islands": islands,
+        }
+        sfkws = {
+            "dissimilarity": skm.manhattan_distances,
+            "affinity": None,
+            "reduction": numpy.sum,
+            "center": numpy.mean,
+            "verbose": 2,
+        }
+        kws.update({"spanning_forest_kwds": sfkws})
         numpy.random.seed(RANDOM_STATE)
         model = Skater(*args, **kws)
         model.solve()
 
         numpy.testing.assert_equal(model.labels_, self.non_default_mexico)
 
+    @pytest.mark.filterwarnings("ignore:MSF contains no valid moves after")
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_island_pass(self):
         self.columbus["count"] = 1
         args = self.columbus, self.w_columbus, self.attrs_columbus
         n_clusters, floor, trace, islands = 10, 5, True, "increase"
-        kws = dict(n_clusters=n_clusters, floor=floor, trace=trace, islands=islands)
-        sfkws = dict(dissimilarity=skm.euclidean_distances)
-        kws.update(dict(spanning_forest_kwds=sfkws))
+        kws = {
+            "n_clusters": n_clusters,
+            "floor": floor,
+            "trace": trace,
+            "islands": islands,
+        }
+        sfkws = {"dissimilarity": skm.euclidean_distances}
+        kws.update({"spanning_forest_kwds": sfkws})
         numpy.random.seed(RANDOM_STATE)
         model = Skater(*args, **kws)
-        model.solve()
+        with (
+            pytest.warns(OptimizeWarning, match="MSF contains no valid moves after"),
+            pytest.warns(
+                OptimizeWarning, match="By default, the graph is disconnected!"
+            ),
+        ):
+            model.solve()
 
-        numpy.testing.assert_equal(model.labels_, self.columbus_labels)
+        numpy.testing.assert_equal(model.labels_, self.columbus_labels_1)
 
+    @pytest.mark.filterwarnings("ignore:By default, the graph is disconnected!")
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
     def test_skater_island_fail(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Islands must be larger than the quorum"):
             self.columbus["count"] = 1
             args = self.columbus, self.w_columbus, self.attrs_columbus
             n_clusters, floor, trace, islands = 10, 10, True, "increase"
-            kws = dict(n_clusters=n_clusters, floor=floor, trace=trace, islands=islands)
-            sfkws = dict(dissimilarity=skm.euclidean_distances)
-            kws.update(dict(spanning_forest_kwds=sfkws))
+            kws = {
+                "n_clusters": n_clusters,
+                "floor": floor,
+                "trace": trace,
+                "islands": islands,
+            }
+            sfkws = {"dissimilarity": skm.euclidean_distances}
+            kws.update({"spanning_forest_kwds": sfkws})
             numpy.random.seed(RANDOM_STATE)
             model = Skater(*args, **kws)
+            with pytest.warns(
+                OptimizeWarning, match="By default, the graph is disconnected!"
+            ):
+                model.solve()
+
+    @pytest.mark.filterwarnings("ignore:By default, the graph is disconnected!")
+    @pytest.mark.filterwarnings("ignore:The weights matrix is not fully")
+    def test_skater_forest_affinity(self):
+        self.columbus["count"] = 1
+        args = self.columbus, self.w_columbus, self.attrs_columbus
+        n_clusters, floor, trace, islands = 4, 2, False, "ignore"
+        kws = {
+            "n_clusters": n_clusters,
+            "floor": floor,
+            "trace": trace,
+            "islands": islands,
+        }
+        sfkws = {
+            "dissimilarity": None,
+            "affinity": skm.cosine_distances,
+            "reduction": numpy.sum,
+            "center": numpy.std,
+        }
+        kws.update({"spanning_forest_kwds": sfkws})
+        numpy.random.seed(RANDOM_STATE)
+        model = Skater(*args, **kws)
+        with pytest.warns(RuntimeWarning, match="divide by zero encountered in log"):
             model.solve()
+
+        numpy.testing.assert_equal(model.labels_, self.columbus_labels_2)

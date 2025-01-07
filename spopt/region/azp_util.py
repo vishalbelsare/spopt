@@ -7,7 +7,13 @@ import numpy as np
 
 
 class AllowMoveStrategy(abc.ABC):
-    def start_new_component(self, initial_labels, attr, objective_func, comp_idx):
+    def start_new_component(
+        self,
+        initial_labels,
+        attr,
+        objective_func,
+        comp_idx,  # noqa: ARG002
+    ):
         """
         This method should be called whenever a new connected component is
         clustered.
@@ -64,7 +70,6 @@ class AllowMoveAZP(AllowMoveStrategy):
             self.objective_val += diff
             return True
         else:
-
             return False
 
 
@@ -86,7 +91,6 @@ class AllowMoveAZPSimulatedAnnealing(AllowMoveStrategy):
             self.notify_move_made()
             return True
         else:
-
             prob = math.exp(-diff / self.t)
             move_allowed = random.random() < prob
             if move_allowed:

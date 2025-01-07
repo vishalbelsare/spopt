@@ -8,9 +8,8 @@ API reference
 .. _data_api:
 
 Region Methods
------------------------
+--------------
 Model based approaches for aggregating a large set of geographic units (with small footprints) into a smaller number of regions (with large footprints).
-
 
 .. autosummary::
    :toctree: generated/
@@ -27,12 +26,15 @@ Model based approaches for aggregating a large set of geographic units (with sma
 Locate Methods
 --------------
 
+Exact solution approaches to facility location modeling problems.
+
 .. autosummary::
    :toctree: generated/
 
-    locate.coverage.LSCP
-    locate.coverage.MCLP
-    locate.PCenter
+    locate.LSCP
+    locate.LSCPB
+    locate.MCLP
     locate.PMedian
-
-
+    locate.KNearestPMedian
+    locate.PCenter
+    locate.PDispersion

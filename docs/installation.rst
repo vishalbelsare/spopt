@@ -3,8 +3,8 @@
 Installation
 ============
 
-spopt supports Python 3.7, 3.8, 3.9, and 3.10. Please make sure that you are
-operating in a Python >= 3.7 environment.
+spopt supports Python >= 3.10_. Please make sure that you are
+operating in a Python >= 3.10 environment.
 
 Installing released version
 ---------------------------
@@ -14,19 +14,15 @@ install directly with `pip` from the command line::
 
   pip install -U spopt
 
-
 or download the source distribution (.tar.gz) and decompress it to your selected
 destination. Open a command shell and navigate to the decompressed folder.
 Type::
 
   pip install .
 
-
 You may also install the latest stable spopt via conda-forge channel by running::
 
   conda install --channel conda-forge spopt
-
-
 
 Installing development version
 ------------------------------
@@ -43,6 +39,7 @@ your fork. By making changes
 to your local clone and submitting a pull request to `pysal/spopt`_, you can
 contribute to spopt development.
 
+.. _3.10: https://docs.python.org/3.10/
 .. _Python Package Index: https://pypi.org/project/spopt/
 .. _pysal/spopt: https://github.com/pysal/spopt
 .. _fork: https://help.github.com/articles/fork-a-repo/ 
